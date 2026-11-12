@@ -3,8 +3,8 @@
 > Keep this file short. Claude reads it at the beginning of every session.
 
 **Current Day:** Day 1  
-**Current Step:** Step 2 — Install the locked project dependencies  
-**State:** Step 1 DONE (uncommitted; owner commits). Step 2 NOT STARTED  
+**Current Step:** Day 1 close-out (all 5 steps done)  
+**State:** Steps 1–5 DONE. Awaiting owner review, commit, and merge to `main`  
 **Current branch:** `day-01-foundation`  
 **Last updated:** 2026-11-12
 
@@ -33,20 +33,25 @@
 
 ## Current task
 
-Install Supabase JS/SSR, Zod, Google GenAI SDK, shadcn/ui prerequisites, Lucide, Recharts, Vitest, Testing Library, Playwright; init shadcn/ui and add only the listed components (Day 1 Step 2).
+Run the Day 1 end-of-day checklist (dev starts, lint/typecheck/test pass, no secret in Git, CLAUDE.md committed). Owner commits, creates the public repo, pushes, and merges `day-01-foundation` to `main`. Then start Day 2 (update this file).
 
 ## Last verified quality checks
 
 - `npm run lint`: PASS (2026-11-12, Node 26.13.1)
-- `npm run typecheck`: script not added until Step 5 (`tsc --noEmit` passes)
-- `npm test`: NOT RUN (Vitest added in Step 5)
-- `npx playwright test`: NOT RUN
-- `npm run dev`: starts; `/` and `/dashboard` return 200
+- `npm run typecheck`: PASS
+- `npm test`: PASS (1 file, 4 tests)
+- `npx playwright test`: NOT RUN (no config/tests/browsers yet)
+- `npm run build`: PASS
+- `npm audit --omit=dev`: 0 vulnerabilities (12 dev-only, need semver-major fixes)
+- `npm run dev`: starts; `/` and `/dashboard` return 200 (Step 1)
 
 ## Blockers / known issues
 
 - GitHub repo `opspilot-ai` (PUBLIC) not created yet; owner creates it and pushes.
-- Step 1 changes are uncommitted; owner commits.
+- `.claude/settings.json` deny `Read(./.env.*)` also matches `.env.example`; Claude cannot read or write it (owner maintains that file).
+- Vite notice: `vitest.config.ts` ESM-in-CJS warning (non-blocking).
+- Steps 2–5 changes are uncommitted; owner commits.
+- Playwright browsers not downloaded yet (needed before e2e, Step 5+).
 
 ## STATUS update rule
 
