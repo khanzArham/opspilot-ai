@@ -2,22 +2,22 @@
 
 > Keep this file short. Claude reads it at the beginning of every session.
 
-**Current Day:** Day 2  
-**Current Step:** Day 2 close-out (all 6 steps done)  
-**State:** Steps 1–6 DONE; migrations applied to hosted DB. Awaiting owner: create 2 Auth users + re-seed, commit, merge to `main`  
-**Current branch:** `day-02-database`  
+**Current Day:** Day 3  
+**Current Step:** Step 5 — Add auth tests (code complete; integration run BLOCKED)  
+**State:** Steps 1–4 DONE. Step 5: unit tests pass; integration suite written but skipped because `SUPABASE_SECRET_KEY` is not available to the test process. Day 3 NOT yet ready to merge.  
+**Current branch:** `day-03-auth-rls`  
 **Last updated:** 2026-11-12
 
 ## Read for this session
 
 1. `CLAUDE.md`
-2. `docs/plan/day-02.md`
-3. Files listed under `Context to load` in `docs/plan/day-02.md` (`docs/database.md`, `docs/architecture.md`)
+2. `docs/plan/day-03.md`
+3. Files listed under `Context to load` in `docs/plan/day-03.md` (`docs/architecture.md`, `docs/database.md`, `docs/security-testing.md`)
 
 ## Completed
 
 - [x] Day 1
-- [x] Day 2 (pending owner commit/merge)
+- [x] Day 2
 - [ ] Day 3
 - [ ] Day 4
 - [ ] Day 5
@@ -33,20 +33,27 @@
 
 ## Current task
 
-Owner: create Auth users `admin@growthflow.example` and `operator@growthflow.example` (passwords in password manager only), then `npx supabase db query --remote --yes -f supabase/seed.sql` to create profiles; commit; merge `day-02-database` → `main`. Then start Day 3 (read `docs/plan/day-03.md`, update this file). Use `--remote` for hosted CLI operations.
+Owner: make `SUPABASE_SECRET_KEY` available to the integration run (non-empty value in the git-ignored `.env.local`; it is the only one of the three required variables not resolving), then run `npm run test:integration` and confirm 13/13 pass. Add `--reporter=verbose` to see skip reasons. After it passes: commit, merge `day-03-auth-rls` → `main`, and start Day 4. The temporary `POST /api/admin/check` endpoint must be removed when the real admin diagnose endpoint exists.
 
-## Last verified quality checks (end of Day 2)
+## Last verified quality checks (Day 3 Step 5)
 
-- `npm run lint`: PASS (Node 26.13.1)
-- `npm run typecheck`: PASS
-- `npm test`: PASS (1 file, 4 tests)
+- `npm run lint`: PASS, 0 warnings (Node 26.13.1)
+- `npm run typecheck`: PASS (`next typegen && tsc --noEmit`)
+- `npm test`: PASS (7 files, 62 tests)
+- `npm run test:integration`: NOT EXECUTED (13 skipped; `SUPABASE_SECRET_KEY` unavailable)
+- `npm run build`: PASS
+- Runtime: crafted unauthenticated `POST /api/admin/check` → 401 envelope
+- RLS verification (`supabase/verification/rls.sql`): 34/34 PASS as anon / operator / admin / no-profile user, rolled back
+- `supabase db advisors --remote`: 1 WARN (leaked-password protection, Pro-only; accepted)
 - `npx playwright test`: NOT RUN (no config/tests/browsers yet)
-- DB invariants (`supabase/verification/invariants.sql`): 9/9 rejected by PostgreSQL
-- `supabase db advisors --remote`: no issues
 
 ## Blockers / known issues
 
 - `.claude/settings.json` deny `Read(./.env.*)` also matches `.env.example` and `.env.local`; Claude cannot read or write them (owner maintains them).
+- Public sign-ups and anonymous sign-ins are disabled (owner-confirmed). Advisor WARN `auth_leaked_password_protection` is Pro-only and accepted ($0 rule).
+- Approved design: `failure_diagnoses`/`approval_decisions` are not browser-readable; the admin Failures page reads them server-side after `requireRole("admin")`.
+- Real sign-in/sign-out not yet exercised end to end: needs the two Auth users + `supabase/seed.sql` re-run; owner can try in a browser (`npm run dev`, `/dashboard` → login).
+- `next.config.ts` has `cacheComponents` enabled: request-time APIs (`cookies()`) need Suspense boundaries in pages (matters for Step 2).
 - Vite notice: `vitest.config.ts` ESM-in-CJS warning (non-blocking).
 - 12 dev-only `npm audit` findings (shadcn CLI, typescript-eslint chain) need semver-major fixes.
 - Playwright config/browsers not set up yet (needed for E2E days).

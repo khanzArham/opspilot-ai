@@ -27,7 +27,18 @@ Quality command per step: `npm run lint && npm run typecheck && npm test`. Run `
 | Expired lease can be reclaimed | Planned |
 | Job attempt history persists | Planned |
 | Approval decision uniqueness | Planned |
-| RLS denies unauthorized mutation | Planned |
+| RLS denies unauthorized mutation | Passing via `supabase/verification/rls.sql` (34 SQL checks as anon / operator / admin, rolled back). Automated Vitest integration version is still Planned (Day 3 Step 5 / Day 13). |
+
+### Auth / authorization coverage (Day 3)
+
+| Layer | Where | What it proves | Status |
+|---|---|---|---|
+| Unit (mocked boundaries) | `tests/unit/{auth-roles,admin-check-route,proxy,auth-validation,supabase-clients,errors}.test.ts` | 401 unauthenticated, 403 operator on admin-only (incl. crafted headers/query/body), 200 admin, 403 hidden/missing profile, safe 500, session-scoped client used and admin client never called, proxy redirects, `next` open-redirect guard | Passing (`npm test`) |
+| Database role simulation | `supabase/verification/rls.sql` | 34 checks as anon / operator / admin / no-profile user; privileges and RLS independently enforced | Passing |
+| Integration (real sessions, hosted dev DB) | `tests/integration/auth.test.ts`, `npm run test:integration` | Real `requireUser`/`requireRole`/route handler with real JWTs: forged cookie 401, operator 403, admin 200, self-read RLS, browser mutations denied (42501), admin client spy never called | **Written; NOT yet executed** (suite skips: `SUPABASE_SECRET_KEY` not available to the test process). Must pass before Day 3 is merged. |
+| Runtime HTTP (production build) | manual `curl` | Crafted `POST /api/admin/check` without a session returns 401 envelope | Passing |
+
+Integration tests build sessions without any stored password: an admin-generated magic-link token is exchanged for a session. They need `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` in the local, git-ignored `.env.local`. They are intentionally separate from `npm test` so the default suite needs no network or secrets.
 
 ## API (Bruno)
 
