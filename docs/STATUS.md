@@ -2,22 +2,22 @@
 
 > Keep this file short. Claude reads it at the beginning of every session.
 
-**Current Day:** Day 1  
-**Current Step:** Day 1 close-out (all 5 steps done)  
-**State:** Steps 1–5 DONE. Awaiting owner review, commit, and merge to `main`  
-**Current branch:** `day-01-foundation`  
+**Current Day:** Day 2  
+**Current Step:** Day 2 close-out (all 6 steps done)  
+**State:** Steps 1–6 DONE; migrations applied to hosted DB. Awaiting owner: create 2 Auth users + re-seed, commit, merge to `main`  
+**Current branch:** `day-02-database`  
 **Last updated:** 2026-11-12
 
 ## Read for this session
 
 1. `CLAUDE.md`
-2. `docs/plan/day-01.md`
-3. Files listed under `Context to load` in `docs/plan/day-01.md`
+2. `docs/plan/day-02.md`
+3. Files listed under `Context to load` in `docs/plan/day-02.md` (`docs/database.md`, `docs/architecture.md`)
 
 ## Completed
 
-- [ ] Day 1
-- [ ] Day 2
+- [x] Day 1
+- [x] Day 2 (pending owner commit/merge)
 - [ ] Day 3
 - [ ] Day 4
 - [ ] Day 5
@@ -33,25 +33,23 @@
 
 ## Current task
 
-Run the Day 1 end-of-day checklist (dev starts, lint/typecheck/test pass, no secret in Git, CLAUDE.md committed). Owner commits, creates the public repo, pushes, and merges `day-01-foundation` to `main`. Then start Day 2 (update this file).
+Owner: create Auth users `admin@growthflow.example` and `operator@growthflow.example` (passwords in password manager only), then `npx supabase db query --remote --yes -f supabase/seed.sql` to create profiles; commit; merge `day-02-database` → `main`. Then start Day 3 (read `docs/plan/day-03.md`, update this file). Use `--remote` for hosted CLI operations.
 
-## Last verified quality checks
+## Last verified quality checks (end of Day 2)
 
-- `npm run lint`: PASS (2026-11-12, Node 26.13.1)
+- `npm run lint`: PASS (Node 26.13.1)
 - `npm run typecheck`: PASS
 - `npm test`: PASS (1 file, 4 tests)
 - `npx playwright test`: NOT RUN (no config/tests/browsers yet)
-- `npm run build`: PASS
-- `npm audit --omit=dev`: 0 vulnerabilities (12 dev-only, need semver-major fixes)
-- `npm run dev`: starts; `/` and `/dashboard` return 200 (Step 1)
+- DB invariants (`supabase/verification/invariants.sql`): 9/9 rejected by PostgreSQL
+- `supabase db advisors --remote`: no issues
 
 ## Blockers / known issues
 
-- GitHub repo `opspilot-ai` (PUBLIC) not created yet; owner creates it and pushes.
-- `.claude/settings.json` deny `Read(./.env.*)` also matches `.env.example`; Claude cannot read or write it (owner maintains that file).
+- `.claude/settings.json` deny `Read(./.env.*)` also matches `.env.example` and `.env.local`; Claude cannot read or write them (owner maintains them).
 - Vite notice: `vitest.config.ts` ESM-in-CJS warning (non-blocking).
-- Steps 2–5 changes are uncommitted; owner commits.
-- Playwright browsers not downloaded yet (needed before e2e, Step 5+).
+- 12 dev-only `npm audit` findings (shadcn CLI, typescript-eslint chain) need semver-major fixes.
+- Playwright config/browsers not set up yet (needed for E2E days).
 
 ## STATUS update rule
 

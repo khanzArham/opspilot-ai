@@ -64,3 +64,34 @@ Keep entries concise. This file is historical evidence; it is **not** startup co
 - **Next:** Day 1 close-out: verify end-of-day checklist, owner commits and merges.
 
 ---
+
+### 2026-11-12 — Day 2 / Step 1 (partial: repo side done, owner side pending)
+- **Implemented:** Supabase CLI 3.1.0 added as a pinned devDependency; `supabase init` generated `supabase/config.toml` (`project_id = "opspilot-ai"`) and `supabase/.gitignore`. `config.toml` contains only `env(...)` placeholders, no secret values.
+- **Files changed:** `package.json`, `package-lock.json`, `supabase/config.toml`, `supabase/.gitignore`, `docs/STATUS.md`.
+- **Tests/checks:** lint pass; typecheck pass; `npm test` 4/4 pass; `npm audit --omit=dev` 0 vulnerabilities.
+- **Issue discovered:** Creating the hosted project, `supabase login`/`link`, and `.env.local` need the owner's Supabase account and secrets; `.env.*` is also deny-listed for Claude.
+- **Decision/fix:** Claude does not handle the access token, DB password or API keys. Owner performs login, link and `.env.local`.
+- **Next:** Owner finishes Step 1; then Day 2 Step 2 (migration 001).
+- **Update:** Owner created the hosted Supabase Free project (`opspilot-ai`, Postgres 17), logged in, linked, and configured `.env.local` (never read by Claude). Verified: `projects list` shows linked + `ACTIVE_HEALTHY`; `.env.local` is git-ignored. Step 1 complete.
+
+---
+
+### 2026-11-12 — Day 2 / Step 2
+- **Implemented:** `supabase/migrations/001_extensions.sql`: idempotent `create extension if not exists` for `pgcrypto` and `pg_net` (schema `extensions`), `pg_cron` (`pg_catalog`), `supabase_vault` (`vault`). Status fields deliberately left to text + CHECK in 002.
+- **Files changed:** `supabase/migrations/001_extensions.sql` (removed `.gitkeep`).
+- **Tests/checks:** `supabase db push --remote --dry-run` lists `001_extensions.sql` as the only pending migration (nothing applied); lint/typecheck/tests pass (4/4); no secrets in migration.
+- **Issue discovered:** Supabase CLI 3.x defaults `db push` to the local stack (needs `supabase start`); remote requires `--remote`.
+- **Decision/fix:** Use `--remote` for hosted operations. Migration is not applied yet: the plan applies all migrations in Step 6 after 002–003 exist.
+- **Next:** Step 3 — migration 002 core schema.
+
+---
+
+### 2026-11-12 — Day 2 / Steps 3–6 (day complete, pending owner commit/merge)
+- **Implemented:** `002_core_schema.sql` — 11 tables per database.md §9 (+ `profiles` from architecture §8.4), UUID PKs, `timestamptz`, text + named CHECKs for every status/enum, FKs without cascade (except `profiles→auth.users`), `set_updated_at()` trigger on profiles/clients/support_tickets/jobs, **RLS enabled with no policies (fail closed)** on all tables. `003_indexes_constraints.sql` — 6 named unique constraints (event_id, external_client_id, normalized_email, (client_id,task_key), (job_id,attempt_number), diagnosis_id) + queue/FK/operational indexes incl. `(status,next_retry_at)`. `seed.sql` — 2 fictional `.example` clients + 8 tasks, idempotent; profiles derived from two Auth users the owner creates (no passwords). All 3 migrations applied to hosted project via `supabase db push --remote`; seed applied via `db query`.
+- **Files changed:** `supabase/migrations/00{1,2,3}_*.sql`, `supabase/seed.sql`, `supabase/verification/invariants.sql`, `supabase/config.toml`, docs.
+- **Tests/checks:** Remote schema inspected: 4 extensions (`pg_cron`, `pg_net`, `pgcrypto`, `supabase_vault`), 11 tables all RLS-on, 6 unique constraints. Invariants run directly in SQL (rolled back, no residue): duplicate event_id, external_client_id, normalized_email, task key, attempt number, second decision → `unique_violation`; disallowed AI action + bad job status → `check_violation`; orphan task → `foreign_key_violation` (9/9 rejected). `supabase db advisors`: no issues. lint/typecheck pass; tests 4/4; secret scan clean.
+- **Issue discovered:** (1) Plan didn't mention RLS this day, but un-RLS'd tables on the hosted project would be reachable via the public API, so RLS is enabled deny-all now; read policies come later per database.md §11. (2) Added 0–1 CHECKs on `ai_confidence`/`confidence` (not in spec) so untrusted AI values can't be stored out of range. (3) `profiles` seed rows are empty until the two Auth users exist.
+- **Decision/fix:** Kept spec column names exactly; `profiles` has no unique beyond PK. The hosted project is the only environment (CLI labels it "production"); no local stack/Docker used.
+- **Next:** Owner: create the two Auth users (`admin@growthflow.example`, `operator@growthflow.example`), re-run `supabase/seed.sql`, commit, merge `day-02-database` → `main`. Then Day 3.
+
+---
