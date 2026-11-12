@@ -3,10 +3,10 @@
 > Keep this file short. Claude reads it at the beginning of every session.
 
 **Current Day:** Day 1  
-**Current Step:** Step 1 — Create the repository and app  
-**State:** NOT STARTED  
+**Current Step:** Step 2 — Install the locked project dependencies  
+**State:** Step 1 DONE (uncommitted; owner commits). Step 2 NOT STARTED  
 **Current branch:** `day-01-foundation`  
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-12
 
 ## Read for this session
 
@@ -33,18 +33,20 @@
 
 ## Current task
 
-Create the GitHub repository and initialize the locked Next.js/TypeScript/Tailwind project exactly as defined in Day 1 Step 1.
+Install Supabase JS/SSR, Zod, Google GenAI SDK, shadcn/ui prerequisites, Lucide, Recharts, Vitest, Testing Library, Playwright; init shadcn/ui and add only the listed components (Day 1 Step 2).
 
 ## Last verified quality checks
 
-- `npm run lint`: NOT RUN
-- `npm run typecheck`: NOT RUN
-- `npm test`: NOT RUN
+- `npm run lint`: PASS (2026-11-12, Node 26.13.1)
+- `npm run typecheck`: script not added until Step 5 (`tsc --noEmit` passes)
+- `npm test`: NOT RUN (Vitest added in Step 5)
 - `npx playwright test`: NOT RUN
+- `npm run dev`: starts; `/` and `/dashboard` return 200
 
 ## Blockers / known issues
 
-None.
+- GitHub repo `opspilot-ai` (PUBLIC) not created yet; owner creates it and pushes.
+- Step 1 changes are uncommitted; owner commits.
 
 ## STATUS update rule
 
